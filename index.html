@@ -609,14 +609,16 @@ function renderTimeSlots() {
   });
   html += '</div>';
 
-  html += '<div style="font-size:.8rem;color:var(--gray-500);margin:.75rem 0 .5rem;">🌇 방과후</div>';
-  html += '<div class="time-grid">';
-  TIMES_AFTER.forEach(t => {
-    const dis = booked.includes(t);
-    const sel = t === selectedTime;
-    html += `<div class="time-slot${dis?' disabled':sel?' selected':''}" ${!dis?`onclick="selectTime('${t}')"`:''}>${t}</div>`;
-  });
-  html += '</div>';
+  if (hasAfter) {
+    html += '<div style="font-size:.8rem;color:var(--gray-500);margin:.75rem 0 .5rem;">🌇 방과후</div>';
+    html += '<div class="time-grid">';
+    TIMES_AFTER.forEach(t => {
+      const dis = booked.includes(t);
+      const sel = t === selectedTime;
+      html += `<div class="time-slot${dis?' disabled':sel?' selected':''}" ${!dis?`onclick="selectTime('${t}')"`:''}>${t}</div>`;
+    });
+    html += '</div>';
+  }
 
   if (isFriday) {
     html += '<div style="font-size:.8rem;color:var(--gray-500);margin:.75rem 0 .5rem;">📚 금요일 수업 중</div>';
