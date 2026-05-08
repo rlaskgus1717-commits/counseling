@@ -469,6 +469,18 @@
   </div>
 </div>
 
+<!-- ── Delete Modal ── -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <div class="modal-title">예약을 삭제하시겠습니까?</div>
+    <p style="font-size:.875rem;color:var(--gray-500);">삭제된 예약은 복구할 수 없습니다.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('delete-modal')">닫기</button>
+      <button class="btn btn-danger" id="confirm-delete-btn">삭제 확인</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Detail Modal ── -->
 <div class="modal-overlay" id="detail-modal">
   <div class="modal">
@@ -715,10 +727,15 @@ function renderResCard(r, isAdmin) {
     <button class="btn btn-sm btn-primary" onclick="changeStatus('${r.id}','done')">완료</button>
     <button class="btn btn-sm btn-danger" onclick="openCancelModal('${r.id}')">취소</button>
     <button class="btn btn-sm btn-secondary" onclick="showDetail('${r.id}')">상세</button>
+    <button class="btn btn-sm btn-danger" onclick="openDeleteModal('${r.id}')">삭제</button>
   ` : (r.status==='pending'||r.status==='confirmed' ? `
     <button class="btn btn-sm btn-danger" onclick="openCancelModal('${r.id}')">예약 취소</button>
     <button class="btn btn-sm btn-secondary" onclick="showDetail('${r.id}')">상세보기</button>
-  ` : `<button class="btn btn-sm btn-secondary" onclick="showDetail('${r.id}')">상세보기</button>`);
+    <button class="btn btn-sm btn-danger" onclick="openDeleteModal('${r.id}')">삭제</button>
+  ` : `
+    <button class="btn btn-sm btn-secondary" onclick="showDetail('${r.id}')">상세보기</button>
+    <button class="btn btn-sm btn-danger" onclick="openDeleteModal('${r.id}')">삭제</button>
+  `);
 
   return `<div class="reservation-item" id="res-${r.id}">
     <div class="res-header">
@@ -838,6 +855,17 @@ function openCancelModal(id) {
     changeStatus(id, 'cancelled');
     closeModal('cancel-modal');
     // refresh check page if visible
+    const q = document.getElementById('search-input').value.trim();
+    if (q) searchReservation();
+  };
+}
+
+function openDeleteModal(id) {
+  openModal('delete-modal');
+  document.getElementById('confirm-delete-btn').onclick = () => {
+    db.ref('reservations/' + id).remove();
+    showToast('예약이 삭제되었습니다.', 'success');
+    closeModal('delete-modal');
     const q = document.getElementById('search-input').value.trim();
     if (q) searchReservation();
   };
