@@ -480,11 +480,27 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script>
+// ══════════════════════════════════════════
+//  FIREBASE 설정 (아래 값을 Firebase 콘솔에서 복사한 값으로 교체하세요)
+// ══════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAUWYSgzPF7puyqHqJOlAHyb6eTTTT8Tx8",
+  authDomain: "school-counseling-69e8c.firebaseapp.com",
+  databaseURL: "https://school-counseling-69e8c-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "school-counseling-69e8c",
+  storageBucket: "school-counseling-69e8c.firebasestorage.app",
+  messagingSenderId: "136438965872",
+  appId: "1:136438965872:web:272b4f935d626f4b6836b5"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 // ══════════════════════════════════════════
 //  DATA
 // ══════════════════════════════════════════
-const STORAGE_KEY = 'counseling_reservations_v2';
 const ADMIN_PW = '2580';
 
 const TIMES_LUNCH = ['12:30'];
@@ -495,7 +511,7 @@ const ALL_TIMES = [...TIMES_LUNCH, ...TIMES_AFTER, ...TIMES_FRIDAY];
 const STATUS_LABEL = { pending:'대기', confirmed:'확정', done:'완료', cancelled:'취소' };
 const STATUS_BADGE = { pending:'badge-pending', confirmed:'badge-confirmed', done:'badge-done', cancelled:'badge-cancelled' };
 
-let reservations = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let reservations = [];
 let selectedDate = '';
 let selectedTime = '';
 let calYear, calMonth;
@@ -503,7 +519,7 @@ let adminTab = 'all';
 let adminFilter = 'all';
 let isAdminLoggedIn = false;
 
-function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(reservations)); }
+function saveReservation(r) { db.ref('reservations/' + r.id).set(r); }
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
 // ══════════════════════════════════════════
@@ -660,8 +676,7 @@ function submitReservation(e) {
     status: 'pending',
     createdAt: new Date().toISOString()
   };
-  reservations.push(r);
-  save();
+  saveReservation(r);
   showToast('예약이 신청되었습니다! ✅','success');
   document.getElementById('book-form').reset();
   selectedDate = ''; selectedTime = '';
@@ -808,11 +823,7 @@ function renderAdminList() {
 }
 
 function changeStatus(id, status) {
-  const r = reservations.find(x=>x.id===id);
-  if (!r) return;
-  r.status = status;
-  save();
-  renderAdminList();
+  db.ref('reservations/' + id + '/status').set(status);
   showToast(`상태가 '${STATUS_LABEL[status]}'(으)로 변경되었습니다.`,'success');
 }
 
@@ -875,7 +886,13 @@ function exportCSV() {
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
-updateStats();
+db.ref('reservations').on('value', (snapshot) => {
+  const data = snapshot.val() || {};
+  reservations = Object.values(data);
+  updateStats();
+  if (isAdminLoggedIn) renderAdminList();
+  if (selectedDate) renderTimeSlots();
+});
 initCalendar();
 </script>
 </body>
